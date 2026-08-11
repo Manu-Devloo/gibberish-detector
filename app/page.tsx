@@ -99,6 +99,36 @@ const KNOWN_TERMS = [
   "container orchestration",
 ];
 
+const COMMON_SHORT_FORMS = [
+  // Common English words
+  "a", "i", "am", "an", "and", "are", "as", "at", "be", "big",
+  "but", "by", "can", "car", "cat", "day", "did", "do", "dog", "for",
+  "get", "had", "has", "he", "her", "him", "his", "how", "if", "in",
+  "is", "it", "let", "man", "may", "me", "my", "new", "no", "not",
+  "of", "oh", "old", "on", "one", "or", "our", "out", "own", "red",
+  "say", "see", "she", "so", "sun", "the", "to", "too", "two", "up",
+  "use", "was", "way", "we", "who", "why", "yes", "you",
+  // Common short Dutch, French, German, Spanish, Italian and Portuguese words
+  "aan", "bij", "de", "een", "en", "er", "het", "ik", "ja", "je",
+  "met", "nu", "of", "om", "op", "te", "tot", "u", "uit", "van", "ze",
+  "au", "aux", "ce", "ces", "des", "du", "est", "et", "il", "la", "le",
+  "les", "ma", "mes", "ne", "nos", "où", "par", "pas", "que", "qui",
+  "sa", "se", "ses", "son", "sur", "tu", "un", "une", "vos",
+  "auf", "aus", "das", "dem", "den", "der", "die", "ein", "es", "für",
+  "hat", "ich", "im", "ist", "man", "mit", "nur", "ob", "sie", "um",
+  "und", "vom", "von", "vor", "war", "was", "wie", "wir", "wo", "zu",
+  "zum", "zur", "al", "con", "del", "el", "fue", "ha", "hay", "las",
+  "lo", "los", "más", "mi", "por", "sin", "su", "sus", "ya", "yo",
+  "che", "chi", "da", "dal", "dei", "di", "gli", "ho", "nel", "non",
+  "per", "più", "tra", "ao", "com", "das", "dos", "eu", "há", "mas",
+  "na", "nas", "os", "sem", "sim", "sua", "seu", "uma",
+  // Widely used abbreviations, units and technical short forms
+  "ar", "b2b", "b2c", "ceo", "cfo", "cm", "cpu", "csv", "cto", "cv",
+  "dl", "dns", "eu", "faq", "git", "gpu", "gps", "hr", "id", "ip",
+  "iq", "it", "js", "kg", "km", "kpi", "mm", "ms", "pdf", "pm", "pr",
+  "ram", "seo", "ssh", "ssl", "tv", "uk", "un", "url", "us", "vr", "xml",
+];
+
 const COMMON_WORDS = [
   // English
   "about", "animal", "answer", "apple", "application", "beautiful",
@@ -130,8 +160,8 @@ const COMMON_WORDS = [
   "gestão", "negócio", "serviço",
 ];
 
-const known = new Set([...KNOWN_TERMS, ...COMMON_WORDS].map(normalize));
-const trainingTokens = [...KNOWN_TERMS, ...COMMON_WORDS]
+const known = new Set([...KNOWN_TERMS, ...COMMON_SHORT_FORMS, ...COMMON_WORDS].map(normalize));
+const trainingTokens = [...KNOWN_TERMS, ...COMMON_SHORT_FORMS, ...COMMON_WORDS]
   .flatMap((term) => normalize(term).split(/[^\p{L}\p{N}]+/u))
   .filter(Boolean)
   .map(latinFold);
@@ -223,6 +253,14 @@ export function detect(value: string): Detection {
     return { verdict: "gibberish", reason: "It does not contain a meaningful word." };
   }
 
+  const onlyToken = meaningfulTokens.length === 1 ? meaningfulTokens[0] : null;
+  if (onlyToken && onlyToken.length <= 3 && !known.has(onlyToken)) {
+    return {
+      verdict: "gibberish",
+      reason: "It is too short to validate and is not a recognised word or abbreviation.",
+    };
+  }
+
   const tokenScores = meaningfulTokens.map((token) => {
     if (known.has(token)) return 1;
     return plausibility(token);
@@ -310,7 +348,6 @@ export default function Home() {
             }}
             placeholder="Start typing..."
             autoComplete="off"
-            autoFocus
           />
         </div>
 
