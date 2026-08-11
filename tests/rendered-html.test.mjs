@@ -29,9 +29,9 @@ test("renders the gibberish detector", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Gibberish Detector<\/title>/i);
-  assert.match(html, /Enter a skill, job title, or keyword\./);
-  assert.match(html, /placeholder="e\.g\. Kubernetes"/);
-  assert.match(html, />Check<\/button>/);
-  assert.match(html, /No LLM or network call\./);
+  assert.match(html, /Enter any word or phrase\./);
+  assert.match(html, /placeholder="Start typing\.\.\."/);
+  assert.match(html, /Checks automatically with no LLM or network call\./);
+  assert.doesNotMatch(html, /Local deterministic demo|>Check<\/button>/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
 });

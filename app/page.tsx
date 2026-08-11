@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 
 type Detection = {
   verdict: "valid" | "gibberish";
@@ -101,11 +101,16 @@ const KNOWN_TERMS = [
 
 const COMMON_WORDS = [
   // English
-  "application", "business", "candidate", "communication", "customer",
-  "development", "education", "experience", "information", "language",
-  "leadership", "management", "network", "operations", "platform",
-  "product", "research", "service", "solution", "strategy", "support",
-  "system", "technology", "testing", "university", "web",
+  "about", "animal", "answer", "apple", "application", "beautiful",
+  "bicycle", "book", "bread", "business", "candidate", "change", "city",
+  "coffee", "communication", "country", "customer", "development", "door",
+  "education", "experience", "family", "flower", "food", "friend", "garden",
+  "happy", "hello", "house", "information", "language", "leadership",
+  "learning", "management", "morning", "mountain", "music", "network",
+  "operations", "orange", "people", "platform", "product", "question",
+  "research", "river", "school", "service", "solution", "strategy", "street",
+  "support", "system", "table", "technology", "testing", "travel", "tree",
+  "university", "water", "weather", "window", "world", "web",
   // Dutch
   "administratie", "advies", "bedrijf", "communicatie", "ervaring",
   "financieel", "informatie", "klant", "management", "netwerk",
@@ -125,7 +130,7 @@ const COMMON_WORDS = [
   "gestão", "negócio", "serviço",
 ];
 
-const known = new Set(KNOWN_TERMS.map(normalize));
+const known = new Set([...KNOWN_TERMS, ...COMMON_WORDS].map(normalize));
 const trainingTokens = [...KNOWN_TERMS, ...COMMON_WORDS]
   .flatMap((term) => normalize(term).split(/[^\p{L}\p{N}]+/u))
   .filter(Boolean)
@@ -187,14 +192,14 @@ function longestConsonantRun(value: string) {
   return Math.max(0, ...runs.map((run) => run.length));
 }
 
-function detect(value: string): Detection {
+export function detect(value: string): Detection {
   const normalized = normalize(value);
   if (!normalized || !/[\p{L}\p{N}]/u.test(normalized)) {
     return { verdict: "gibberish", reason: "It contains no letters or numbers." };
   }
 
   if (known.has(normalized)) {
-    return { verdict: "valid", reason: "It is a recognised professional term." };
+    return { verdict: "valid", reason: "It is a recognised word or term." };
   }
 
   if (looksRepeated(normalized) || looksLikeKeyboardNoise(normalized)) {
@@ -227,8 +232,16 @@ function detect(value: string): Detection {
   ), 0) / meaningfulTokens.reduce((total, token) => total + Math.max(1, token.length), 0);
   const longestToken = Math.max(...meaningfulTokens.map((token) => token.length));
   const suspiciousConsonants = longestConsonantRun(normalized) >= 7;
+  const lowestSubstantialTokenScore = Math.min(
+    ...meaningfulTokens
+      .filter((token) => token.length >= 4)
+      .map((token) => known.has(token) ? 1 : plausibility(token)),
+    1,
+  );
 
-  if ((longestToken >= 7 && weightedScore < 0.34)
+  if ((longestToken >= 4 && weightedScore < 0.2)
+      || (longestToken >= 7 && weightedScore < 0.34)
+      || (lowestSubstantialTokenScore < 0.16)
       || (suspiciousConsonants && weightedScore < 0.58)) {
     return {
       verdict: "gibberish",
@@ -239,21 +252,16 @@ function detect(value: string): Detection {
   return {
     verdict: "valid",
     reason: known.has(normalized)
-      ? "It is a recognised professional term."
-      : "It looks like plausible language or a professional term.",
+      ? "It is a recognised word or term."
+      : "It looks like a plausible word or phrase.",
   };
 }
 
-const examples = ["Kubernetes", "Software engineer", "C++", "fskjhsfskjdfh"];
+const examples = ["Bicycle", "Bonjour", "こんにちは", "fskjhsfskjdfh"];
 
 export default function Home() {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<Detection | null>(null);
-
-  function check(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setResult(detect(query));
-  }
 
   function tryExample(example: string) {
     setQuery(example);
@@ -263,27 +271,24 @@ export default function Home() {
   return (
     <main>
       <section className="detector" aria-labelledby="page-title">
-        <p className="eyebrow">Local deterministic demo</p>
         <h1 id="page-title">Gibberish Detector</h1>
-        <p className="intro">Enter a skill, job title, or keyword.</p>
+        <p className="intro">Enter any word or phrase.</p>
 
-        <form onSubmit={check}>
+        <div>
           <label htmlFor="query">Query</label>
-          <div className="input-row">
-            <input
-              id="query"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setResult(null);
-              }}
-              placeholder="e.g. Kubernetes"
-              autoComplete="off"
-              autoFocus
-            />
-            <button type="submit">Check</button>
-          </div>
-        </form>
+          <input
+            id="query"
+            value={query}
+            onChange={(event) => {
+              const value = event.target.value;
+              setQuery(value);
+              setResult(value.trim() ? detect(value) : null);
+            }}
+            placeholder="Start typing..."
+            autoComplete="off"
+            autoFocus
+          />
+        </div>
 
         <div className="examples" aria-label="Example queries">
           {examples.map((example) => (
@@ -305,7 +310,8 @@ export default function Home() {
         </div>
 
         <p className="note">
-          No LLM or network call. Non-Latin scripts are accepted conservatively.
+          Checks automatically with no LLM or network call. Non-Latin scripts are
+          accepted conservatively and clearly labelled when this happens.
         </p>
       </section>
     </main>
