@@ -28,10 +28,13 @@ test("renders the gibberish detector", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Gibberish Detector<\/title>/i);
-  assert.match(html, /Enter any word or phrase\./);
+  assert.match(html, /<title>Free Gibberish Detector/);
+  assert.match(html, /Enter any word or phrase to check whether it looks meaningful/);
   assert.match(html, /placeholder="Start typing\.\.\."/);
   assert.match(html, /Checks automatically with no LLM or network call\./);
+  assert.match(html, /rel="canonical"/);
+  assert.match(html, /application\/ld\+json/);
+  assert.match(html, /WebApplication/);
   assert.doesNotMatch(html, /Local deterministic demo|>Check<\/button>/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
 });

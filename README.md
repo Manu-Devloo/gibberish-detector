@@ -10,6 +10,9 @@ Latin-script text. Non-Latin scripts are accepted conservatively unless they
 are clearly repetitive or malformed, and the result explicitly explains when
 that conservative pass-through was used.
 
+The public site includes descriptive metadata, a canonical URL, social preview
+metadata, `WebApplication` structured data, crawl rules, and a sitemap.
+
 ## Run locally
 
 ```bash

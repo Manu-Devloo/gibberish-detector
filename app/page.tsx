@@ -258,6 +258,21 @@ export function detect(value: string): Detection {
 }
 
 const examples = ["Bicycle", "Bonjour", "こんにちは", "fskjhsfskjdfh"];
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Gibberish Detector",
+  url: "https://gibberish-detector.pixelation.chatgpt.site/",
+  description: "A free browser-based tool that checks whether a word or phrase looks meaningful or like random gibberish.",
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Any",
+  browserRequirements: "Requires JavaScript",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+};
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -271,8 +286,17 @@ export default function Home() {
   return (
     <main>
       <section className="detector" aria-labelledby="page-title">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+          }}
+        />
         <h1 id="page-title">Gibberish Detector</h1>
-        <p className="intro">Enter any word or phrase.</p>
+        <p className="intro">
+          Enter any word or phrase to check whether it looks meaningful or like
+          random text.
+        </p>
 
         <div>
           <label htmlFor="query">Query</label>

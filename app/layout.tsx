@@ -21,17 +21,33 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = (requestHeaders.get("x-forwarded-proto")
     ?? (host.startsWith("localhost") ? "http" : "https")).split(",")[0].trim();
   const origin = `${protocol}://${host}`;
-  const title = "Gibberish Detector";
-  const description = "A simple, local and deterministic query sanity checker.";
+  const title = "Free Gibberish Detector – Check Words & Text";
+  const description = "Check any word or phrase instantly to see whether it looks meaningful or like random gibberish. Free, private, and no LLM required.";
   const socialImage = `${origin}/og.png`;
 
   return {
     title,
     description,
+    applicationName: "Gibberish Detector",
+    alternates: {
+      canonical: origin,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
     openGraph: {
       title,
       description,
       type: "website",
+      url: origin,
+      siteName: "Gibberish Detector",
       images: [{
         url: socialImage,
         width: 1200,
